@@ -1,3 +1,58 @@
+import android.Manifest
+import android.os.Build
+import androidx.activity.result.contract.ActivityResultContracts
+
+// Badha permissions ek function ma
+fun getRequiredPermissions(): Array<String> {
+    return when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
+            // Android 14+
+            arrayOf(
+                Manifest.permission.READ_MEDIA_IMAGES,
+                Manifest.permission.READ_MEDIA_VIDEO,
+                Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+            )
+        }
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+            // Android 13
+            arrayOf(
+                Manifest.permission.READ_MEDIA_IMAGES,
+                Manifest.permission.READ_MEDIA_VIDEO
+            )
+        }
+        else -> {
+            // Android 12 ane niche
+            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+    }
+}
+
+private val permissionLauncher =
+    registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        val imageOk = results[Manifest.permission.READ_MEDIA_IMAGES]
+            ?: results[Manifest.permission.READ_EXTERNAL_STORAGE]
+            ?: false
+
+        val videoOk = results[Manifest.permission.READ_MEDIA_VIDEO]
+            ?: results[Manifest.permission.READ_EXTERNAL_STORAGE]
+            ?: false
+
+        // Android 14 partial access check
+        val partialOk = results[Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED]
+            ?: false
+
+        when {
+            imageOk && videoOk -> loadAllMedia()
+            partialOk         -> loadSelectedMedia()
+            else              -> showPermissionDeniedUI()
+        }
+    }
+
+fun askMediaPermission() {
+    permissionLauncher.launch(getRequiredPermissions())
+}
 class ContactAdapter(
     private val contacts: List<Contact>
 ) : RecyclerView.Adapter<ContactAdapter.ContactViewHolder>() {
