@@ -1,0 +1,142 @@
+class ContactAdapter(
+    private val contacts: List<Contact>
+) : RecyclerView.Adapter<ContactAdapter.ContactViewHolder>() {
+
+    // ── ViewHolder ──────────────────────────────────────────────
+    inner class ContactViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val tvAvatar: TextView   = itemView.findViewById(R.id.tvAvatar)
+        val tvName: TextView     = itemView.findViewById(R.id.tvName)
+        val tvPhone: TextView    = itemView.findViewById(R.id.tvPhone)
+        val btnCall: ImageButton = itemView.findViewById(R.id.btnCall)
+    }
+
+    // ── Create ViewHolder ────────────────────────────────────────
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ContactViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_contact, parent, false)
+        return ContactViewHolder(view)
+    }
+
+    // ── Bind Data ────────────────────────────────────────────────
+    override fun onBindViewHolder(holder: ContactViewHolder, position: Int) {
+        val contact = contacts[position]
+
+        // Name ni first letter avatar ma dikhavvo
+        holder.tvAvatar.text = contact.name.first().uppercaseChar().toString()
+        holder.tvName.text   = contact.name
+        holder.tvPhone.text  = contact.phoneNumber
+
+        // Call button click
+        holder.btnCall.setOnClickListener {
+            makeCall(holder, contact.phoneNumber)
+        }
+
+        // Whole row click karo to pan call thay
+        holder.itemView.setOnClickListener {
+            makeCall(holder, contact.phoneNumber)
+        }
+    }
+
+    override fun getItemCount(): Int = contacts.size
+
+    // ── Phone Call Function ──────────────────────────────────────
+    private fun makeCall(holder: ContactViewHolder, phoneNumber: String) {
+        val context = holder.itemView.context
+
+        // CALL_PHONE permission check
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE)
+            == PackageManager.PERMISSION_GRANTED
+        ) {
+            // Permission chhe — seedho call karo
+            val callIntent = Intent(Intent.ACTION_CALL).apply {
+                data = Uri.parse("tel:$phoneNumber")
+            }
+            context.startActivity(callIntent)
+        } else {
+            // Permission nathi — Dialer open karo (user manually call kare)
+            val dialIntent = Intent(Intent.ACTION_DIAL).apply {
+                data = Uri.parse("tel:$phoneNumber")
+            }
+            context.startActivity(dialIntent)
+            Toast.makeText(context, "Call permission nathi, dialer khulyo", Toast.LENGTH_SHORT).show()
+        }
+    }
+}
+<!-- res/drawable/bg_avatar.xml -->
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#6200EE" />
+</shape>
+<!-- res/drawable/bg_call_button.xml -->
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#E8F5E9" />
+</shape>
+<!-- res/layout/item_contact.xml -->
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:gravity="center_vertical">
+
+        <!-- Avatar Circle -->
+        <TextView
+            android:id="@+id/tvAvatar"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:textSize="20sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:background="@drawable/bg_avatar" />
+
+        <!-- Name + Number -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="12dp">
+
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#1A1A1A" />
+
+            <TextView
+                android:id="@+id/tvPhone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:textColor="#666666"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <!-- Call Button -->
+        <ImageButton
+            android:id="@+id/btnCall"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:src="@drawable/ic_call"
+            android:background="@drawable/bg_call_button"
+            android:contentDescription="Call" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
